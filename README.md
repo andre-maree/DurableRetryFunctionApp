@@ -13,9 +13,9 @@ This is a demo app that can be used for learning purposes. It can also be used a
 
 ## Project Structure
 - `Program.cs`: Functions host startup and configuration
-- `Functions/HttpFunctions.cs`: HTTP triggers to start and get status of orchestrations
+- `Functions/HttpFunctions.cs`: HTTP triggers to start orchestrations
 - `Orchestrations/MainOrchestrations.cs`: Durable orchestrators applying retry policies and coordinating activities
-- `Activities/RetryActivity.cs`: Activity showcasing transient and 429 error handling
+- `Activities/RetryActivity.cs`: Activity showcasing transient and 429 http code error handling
 - `Emulator/EmulatorFunction.cs`: Emulator helper for local testing
 
 ## Requirements
@@ -24,5 +24,4 @@ This is a demo app that can be used for learning purposes. It can also be used a
 - Azurite (optional) for local storage emulation`
 
 ## Notes
-- Intended for demonstration and learning of durable retries with transient failures.
-- For production, validate inputs, secure HTTP endpoints, and externalize configuration.
+- Intended for demonstration and learning of durable retries with http 429 and other transient failures.
