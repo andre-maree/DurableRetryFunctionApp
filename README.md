@@ -15,7 +15,7 @@ This is a demo app that can be used for learning purposes. It can also be used a
 - `Program.cs`: Functions host startup and configuration
 - `Functions/HttpFunctions.cs`: HTTP triggers to start and get status of orchestrations
 - `Orchestrations/MainOrchestrations.cs`: Durable orchestrators applying retry policies and coordinating activities
-- `Activities/RetryActivity.cs`: Activity showcasing transient error handling
+- `Activities/RetryActivity.cs`: Activity showcasing transient and 429 error handling
 - `Emulator/EmulatorFunction.cs`: Emulator helper for local testing
 
 ## Requirements
