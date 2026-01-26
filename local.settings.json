@@ -1,0 +1,12 @@
+{
+    "IsEncrypted": false,
+    "Values": {
+        "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+        "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+        "Retry_MaxNumberOfAttempts": "2000",
+        "Retry_FirstRetrySeconds": "5",
+        "Retry_BackoffCoefficient": "1.1125",
+        "Retry_MaxRetrySeconds": "100",
+        "Retry_TotalTimeoutHours": "72"
+    }
+}
