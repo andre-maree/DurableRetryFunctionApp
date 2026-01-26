@@ -7,14 +7,14 @@ This is a demo app that can be used for learning purposes. It can also be used a
 
 ## Features
 - Durable Functions orchestration with retry support, including handling of 429 responses
-- Configurable retry options (max attempts, backoff, jitter)
+- Configurable retry options (max attempts, backoff)
 - Activity demonstrating transient failures and retry behavior
 - Local emulator function for testing
 
 ## Project Structure
 - `Program.cs`: Functions host startup and configuration
 - `Functions/HttpFunctions.cs`: HTTP triggers to start orchestrations
-- `Orchestrations/MainOrchestrations.cs`: Durable orchestrators applying retry policies and coordinating activities
+- `Orchestrations/RetryOrchestrator.cs`: Durable orchestrators handling retrying and coordinating activities
 - `Activities/RetryActivity.cs`: Activity showcasing transient and 429 http code error handling
 - `Emulator/EmulatorFunction.cs`: Emulator helper for local testing
 
