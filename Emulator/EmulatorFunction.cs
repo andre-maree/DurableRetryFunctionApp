@@ -19,20 +19,13 @@ public class EmulatorFunction
     {
         await Task.Delay(700);
 
-        if(Random.Shared.Next(1, 3) == 2)
+        if (retrycount < 3)
         {
+            // Indicate delay time before retrying (in seconds)
             req.HttpContext.Response.Headers.RetryAfter = $"{5 + retrycount}";
 
             return new ContentResult { StatusCode = StatusCodes.Status429TooManyRequests };
         }
-
-        //if (retrycount < 3)
-        //{
-        //    // Indicate delay time before retrying (in seconds)
-        //    req.HttpContext.Response.Headers.RetryAfter = $"{5 + retrycount}";
-
-        //    return new ContentResult { StatusCode = StatusCodes.Status429TooManyRequests };
-        //}
 
         //return new StatusCodeResult(301);
 

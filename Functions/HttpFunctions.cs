@@ -11,20 +11,31 @@ namespace DurableRetryDemoFunctionApp;
 
 public class HttpFunctions
 {
+    /// <summary>
+    /// HTTP-triggered function that:
+    /// 1) Reads the incoming request body (or uses a default payload),
+    /// 2) Persists it to Blob Storage (blob name acts as orchestration instance ID),
+    /// 3) Builds retry configuration from environment variables,
+    /// 4) Starts a Durable Functions orchestration and returns a 202 with status endpoints.
+    /// </summary>
     [Function("RetryDemoFunction_HttpStart")]
     public async Task<HttpResponseData> HttpStart(
+        // Anonymous GET/POST entry point for demo purposes; secure appropriately in production.
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestData req,
+        // Durable client used to schedule and manage orchestration instances.
         [DurableClient] DurableTaskClient client,
         FunctionContext executionContext)
     {
         ILogger logger = executionContext.GetLogger("RetryDemoFunction_HttpStart");
 
-        // Read request content and persist to blob
+        // Read request content; if empty, use a default JSON payload to simulate an email request.
         string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
         requestBody = string.IsNullOrWhiteSpace(requestBody) ? "{\"to\":\"someone@gmail.com\",\"subject\":\"Test\",\"body\":\"Hello\"}" : requestBody;
 
+        // Generate a unique blob name (also used as the orchestration instance ID).
         string blobName = $"{Guid.NewGuid():N}";
 
+        // Persist the request payload to Blob Storage so the activity can read it later.
         try
         {
             string storageConn = Environment.GetEnvironmentVariable("AzureWebJobsStorage")!;
@@ -37,19 +48,22 @@ public class HttpFunctions
 
             try
             {
+                // Try upload; if the container doesn't exist, catch 404 and create it.
                 await blobClient.UploadAsync(contentStream, overwrite: false);
             }
             catch (RequestFailedException ex) when (ex.Status == 404)
             {
-                // Container likely does not exist; create and retry
+                // Container not found; create it and retry the upload.
                 await container.CreateIfNotExistsAsync();
 
+                // Reset stream position before retrying the upload.
                 contentStream.Position = 0;
 
                 await blobClient.UploadAsync(contentStream, overwrite: false);
             }
             catch (RequestFailedException ex)
             {
+                // Log and rethrow unexpected storage errors.
                 logger.LogError(ex, "Failed to create blob container.");
 
                 throw;
@@ -57,11 +71,12 @@ public class HttpFunctions
         }
         catch (Exception ex)
         {
+            // Non-fatal: log the error but continue to start the orchestration.
             logger.LogError(ex, "Failed to save request body to blob storage.");
         }
 
-        // Function input comes from the request content.
-        // Build config from environment once and pass into orchestrator input deterministically
+        // Build retry configuration from environment variables (with reasonable defaults).
+        // This config is passed to the orchestrator to deterministically control retry behavior.
         RetryPolicyConfig cfg = new()
         {
             MaxNumberOfAttempts = GetEnvInt("Retry_MaxNumberOfAttempts", 2000),
@@ -71,17 +86,24 @@ public class HttpFunctions
             TotalTimeoutDate = DateTime.UtcNow.AddHours(GetEnvInt("Retry_TotalTimeoutHours", 100))
         };
 
+        // Initial orchestrator input: includes config and starting retry count.
         OrchestrationInput input = new() { Config = cfg, RetryCount = 0 };
 
-        // Start the orchestration and pass the config input. The instance ID is the blob name.
-        await client.ScheduleNewOrchestrationInstanceAsync("RetryOrchestrator", input: input, options: new StartOrchestrationOptions { InstanceId = blobName });
+        // Start the orchestration with a deterministic instance ID (blobName) so the activity can read the blob by ID.
+        await client.ScheduleNewOrchestrationInstanceAsync(
+            "RetryOrchestrator",
+            input: input,
+            options: new StartOrchestrationOptions { InstanceId = blobName });
 
         logger.LogInformation("Started orchestration with ID = '{instanceId}'.", blobName);
 
-        // Returns an HTTP 202 response with an instance management payload.
+        // Return a 202 Accepted with links to check status, send event, and terminate via Durable Functions HTTP management APIs.
         return await client.CreateCheckStatusResponseAsync(req, blobName);
     }
 
+    /// <summary>
+    /// Reads an integer environment variable or returns a default if missing/invalid.
+    /// </summary>
     private static int GetEnvInt(string key, int defaultValue)
     {
         string? v = Environment.GetEnvironmentVariable(key);
@@ -89,6 +111,9 @@ public class HttpFunctions
         return int.TryParse(v, out int parsed) ? parsed : defaultValue;
     }
 
+    /// <summary>
+    /// Reads a double environment variable (InvariantCulture) or returns a default if missing/invalid.
+    /// </summary>
     private static double GetEnvDouble(string key, double defaultValue)
     {
         string? v = Environment.GetEnvironmentVariable(key);

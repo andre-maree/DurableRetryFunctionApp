@@ -29,7 +29,7 @@ public class RetryOrchestration
         int retrycount = input.RetryCount;
 
         // Call the activity function to send the email
-        RetryResult result = await context.CallActivityAsync<RetryResult>("ActionAsync", input: retrycount, options: opts);
+        RetryResult result = await context.CallActivityAsync<RetryResult>("HttpAction", input: retrycount, options: opts);
 
         // Determine whether to retry or complete
         if (!result.MustRetry)
