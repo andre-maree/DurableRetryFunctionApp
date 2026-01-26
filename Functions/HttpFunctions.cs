@@ -74,7 +74,7 @@ public class HttpFunctions
         OrchestrationInput input = new() { Config = cfg, RetryCount = 0 };
 
         // Start the orchestration and pass the config input. The instance ID is the blob name.
-        await client.ScheduleNewOrchestrationInstanceAsync("MainOrchestrator", input: input, options: new StartOrchestrationOptions { InstanceId = blobName });
+        await client.ScheduleNewOrchestrationInstanceAsync("RetryOrchestrator", input: input, options: new StartOrchestrationOptions { InstanceId = blobName });
 
         logger.LogInformation("Started orchestration with ID = '{instanceId}'.", blobName);
 

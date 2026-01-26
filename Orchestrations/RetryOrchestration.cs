@@ -4,10 +4,10 @@ using DurableRetryDemoFunctionApp.Models;
 
 namespace DurableRetryDemoFunctionApp;
 
-public class MainOrchestrations
+public class RetryOrchestration
 {
-    [Function(nameof(MainOrchestrator))]
-    public static async Task<string> MainOrchestrator([OrchestrationTrigger] TaskOrchestrationContext context)
+    [Function(nameof(RetryOrchestrator))]
+    public static async Task<string> RetryOrchestrator([OrchestrationTrigger] TaskOrchestrationContext context)
     {
         OrchestrationInput input = context.GetInput<OrchestrationInput>();
 
